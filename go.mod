@@ -1,4 +1,4 @@
-module github.com/consensys/gnark-ignition-verifier
+module github.com/GopherJ/gnark-ignition-verifier
 
 go 1.20
 

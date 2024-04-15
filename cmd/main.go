@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/consensys/gnark-crypto/ecc/bn254"
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr/kzg"
-	"github.com/consensys/gnark-ignition-verifier/ignition"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr/kzg"
+	"github.com/GopherJ/gnark-ignition-verifier/ignition"
 )
 
 const startIdx = 30
@@ -67,14 +67,14 @@ func main() {
 
 	log.Println("success ✅: all contributions are valid")
 
-	// we use the last contribution to build a kzg SRS for bn254
+	// we use the last contribution to build a kzg SRS for bls12381
 	srs := kzg.SRS{
 		Pk: kzg.ProvingKey{
 			G1: next.G1,
 		},
 		Vk: kzg.VerifyingKey{
 			G1: next.G1[0],
-			G2: [2]bn254.G2Affine{
+			G2: [2]bls12381.G2Affine{
 				g2gen,
 				next.G2[0],
 			},
@@ -92,7 +92,7 @@ func main() {
 
 	// we can now serialize the SRS and use it, for example in gnark / PlonK circuits
 	n := len(srs.Pk.G1)
-	srsPath := fmt.Sprintf("kzg_srs_%d_bn254_%s", n, config.Ceremony)
+	srsPath := fmt.Sprintf("kzg_srs_%d_bls12381_%s", n, config.Ceremony)
 	srsPath = filepath.Join(config.CacheDir, srsPath)
 	f, err := os.Create(srsPath)
 	if err != nil {
@@ -159,8 +159,8 @@ func eval(p []fr.Element, point fr.Element) fr.Element {
 	return res
 }
 
-var g2gen bn254.G2Affine
+var g2gen bls12381.G2Affine
 
 func init() {
-	_, _, _, g2gen = bn254.Generators()
+	_, _, _, g2gen = bls12381.Generators()
 }

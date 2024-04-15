@@ -11,21 +11,21 @@ import (
 	"sync/atomic"
 
 	"github.com/consensys/gnark-crypto/ecc"
-	"github.com/consensys/gnark-crypto/ecc/bn254"
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"golang.org/x/crypto/blake2b"
 )
 
 // Contribution is a participant's contribution to the ceremony
 type Contribution struct {
-	G1 []bn254.G1Affine
-	G2 [2]bn254.G2Affine
+	G1 []bls12381.G1Affine
+	G2 [2]bls12381.G2Affine
 }
 
 // NewContribution allocates a new contribution
 func NewContribution(nbPoints int) Contribution {
 	var c Contribution
-	c.G1 = make([]bn254.G1Affine, nbPoints)
+	c.G1 = make([]bls12381.G1Affine, nbPoints)
 	return c
 }
 
@@ -56,7 +56,7 @@ func (c *Contribution) Get(participant Participant, config Config) error {
 		// read G1 points
 		offset := 28
 		readG1Points(b[offset:], tManifest.NumG1Points, c.G1[tManifest.StartFrom:tManifest.StartFrom+tManifest.NumG1Points])
-		offset += int(tManifest.NumG1Points) * bn254.SizeOfG1AffineUncompressed
+		offset += int(tManifest.NumG1Points) * bls12381.SizeOfG1AffineUncompressed
 
 		// read G2 point
 		if i == 0 {
@@ -64,7 +64,7 @@ func (c *Contribution) Get(participant Participant, config Config) error {
 			if !c.G2[0].IsInSubGroup() || !c.G2[1].IsInSubGroup() {
 				return errors.New("invalid G2 point: not in subgroup")
 			}
-			offset += bn254.SizeOfG2AffineUncompressed * 2
+			offset += bls12381.SizeOfG2AffineUncompressed * 2
 		}
 
 		// The 'checksum' - a BLAKE2B hash of the rest of the file's data
@@ -112,16 +112,16 @@ func (c *Contribution) IsValid() bool {
 // utils functions; from gnark groth16 mpc
 
 // sameRatio checks that e(a₁, a₂) = e(b₁, b₂)
-func sameRatio(a1, b1 bn254.G1Affine, a2, b2 bn254.G2Affine) bool {
+func sameRatio(a1, b1 bls12381.G1Affine, a2, b2 bls12381.G2Affine) bool {
 	// we already know that a1, b1, a2, b2 are in the correct subgroup
 	// if !a1.IsInSubGroup() || !b1.IsInSubGroup() || !a2.IsInSubGroup() || !b2.IsInSubGroup() {
 	// 	panic("invalid point not in subgroup")
 	// }
-	var na2 bn254.G2Affine
+	var na2 bls12381.G2Affine
 	na2.Neg(&a2)
-	res, err := bn254.PairingCheck(
-		[]bn254.G1Affine{a1, b1},
-		[]bn254.G2Affine{na2, b2})
+	res, err := bls12381.PairingCheck(
+		[]bls12381.G1Affine{a1, b1},
+		[]bls12381.G2Affine{na2, b2})
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ var initROnce sync.Once
 var rVector []fr.Element
 
 // L1 = ∑ rᵢAᵢ, L2 = ∑ rᵢAᵢ₊₁ in G1
-func linearCombinationG1(A []bn254.G1Affine) (L1, L2 bn254.G1Affine) {
+func linearCombinationG1(A []bls12381.G1Affine) (L1, L2 bls12381.G1Affine) {
 	nc := runtime.NumCPU()
 	n := len(A)
 	initROnce.Do(func() {
@@ -201,8 +201,8 @@ func execute(nbIterations int, work func(int, int), maxCpus ...int) {
 	wg.Wait()
 }
 
-var g2gen bn254.G2Affine
+var g2gen bls12381.G2Affine
 
 func init() {
-	_, _, _, g2gen = bn254.Generators()
+	_, _, _, g2gen = bls12381.Generators()
 }

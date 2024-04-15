@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/consensys/gnark-crypto/ecc/bn254"
-	"github.com/consensys/gnark-crypto/ecc/bn254/fp"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381"
+	"github.com/consensys/gnark-crypto/ecc/bls12-381/fp"
 )
 
 // readOrDownload reads a file from disk if it exists, or downloads it from the URL if it doesn't.
@@ -72,7 +72,7 @@ func readOrDownload(baseURL, file string, config Config) ([]byte, error) {
 
 }
 
-func readG1Points(b []byte, nbPoints uint32, r []bn254.G1Affine) {
+func readG1Points(b []byte, nbPoints uint32, r []bls12381.G1Affine) {
 	// per the specs:
 	// For big-integer numbers (g1, g2 coordinates),
 	// we describe each 256-bit field element as a uint64_t[4] array.
@@ -98,7 +98,7 @@ func readG1Points(b []byte, nbPoints uint32, r []bn254.G1Affine) {
 	}
 }
 
-func readG2Points(data []byte, r *[2]bn254.G2Affine) {
+func readG2Points(data []byte, r *[2]bls12381.G2Affine) {
 	_ = data[255]
 	// per the specs:
 	// For big-integer numbers (g1, g2 coordinates),
